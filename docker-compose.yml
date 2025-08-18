@@ -1,4 +1,5 @@
-version: '3.8'
+# Docker Compose file for full monorepo
+# Links both frontend and backend services
 
 services:
   db:
