@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   db:
-    image: postgres:16
+    image: postgres:15
+    container_name: ${DB_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-db}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-monorepo_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -10,58 +11,69 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - app-network
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    container_name: ${REDIS_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-redis}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     networks:
       - app-network
+    restart: unless-stopped
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.${ENVIRONMENT:-development}
+    container_name: ${BACKEND_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-backend}
     environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
       - DEBUG=${DEBUG:-True}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-monorepo_db}
-      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@${DB_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-db}:5432/${POSTGRES_DB:-monorepo_db}
+      - REDIS_URL=redis://${REDIS_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-redis}:6379/0
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-change-me}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
     volumes:
       - ./backend:/app
       - /app/venv
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       - db
       - redis
     networks:
       - app-network
-    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile.${ENVIRONMENT:-development}
+    container_name: ${FRONTEND_CONTAINER_NAME:-${PROJECT_NAME:-monorepo}-frontend}
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - NEXT_PUBLIC_API_URL=http://localhost:${BACKEND_PORT:-8000}
+      - NODE_ENV=${NODE_ENV:-development}
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       - backend
     networks:
       - app-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
 
 networks:
   app-network:
+    name: ${NETWORK_NAME:-${PROJECT_NAME:-monorepo}-network}
     driver: bridge
-
