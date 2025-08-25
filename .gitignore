@@ -1,8 +1,81 @@
-# Python
+# Environment files
+.env
+.env.local
+.env.dev
+.env.uat
+.env.prod
+.env.development
+.env.production
+.env.test
+
+# Docker volumes and data
+postgres_data/
+redis_data/
+static_volume/
+media_volume/
+
+# Backup files
+backups/
+*.sql
+*.dump
+
+# SSL certificates
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+
+# Nginx logs
+nginx/logs/*.log
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Docker Compose overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Node modules (frontend builds)
+node_modules/
+
+# Python cache (if running locally)
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Coverage reports
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+
+# Test artifacts
+.pytest_cache/
+.tox/
+
+# Documentation builds
+docs/_build/
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -16,58 +89,20 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
-venv/
-env/
-ENV/
 
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-media/
-staticfiles/
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
+# IPython
+profile_default/
+ipython_config.py
 
-# Next.js
-.next/
-out/
-build/
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Docker
-.dockerignore
-
-# Coverage
-coverage/
-.nyc_output/
-
-# Logs
-*.log
-
+# Local development overrides
+docker-compose.dev.local.yml
+docker-compose.prod.local.yml
+docker-compose.uat.local.yml
