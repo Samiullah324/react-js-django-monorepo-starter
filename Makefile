@@ -81,6 +81,8 @@ stop: ## Stop all services
 	@echo "$(YELLOW)🛑 Stopping services for $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) down
 
+down: stop ## Alias for stop command
+
 restart: ## Restart all services
 	@echo "$(YELLOW)🔄 Restarting services for $(ENV) environment...$(NC)"
 	@make stop ENV=$(ENV)
@@ -136,10 +138,24 @@ createsuperuser: ## Create Django superuser
 	@echo "$(GREEN)👤 Creating Django superuser for $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend python manage.py createsuperuser
 
+schema: ## Generate OpenAPI schema
+	@echo "$(GREEN)📄 Generating OpenAPI schema for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend python manage.py spectacular --color --file schema.yml
+
+docs: ## Show API documentation URLs
+	@echo "$(BLUE)📖 API Documentation URLs for $(ENV) environment:$(NC)"
+	@echo "  Swagger UI: http://localhost:8080/api/docs/"
+	@echo "  ReDoc:      http://localhost:8080/api/redoc/"
+	@echo "  Schema:     http://localhost:8080/api/schema/"
+
 ##@ Development Tools
 shell: ## Access backend shell
 	@echo "$(BLUE)🐚 Opening backend shell for $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend python manage.py shell
+
+dbshell: ## Open database shell
+	@echo "$(BLUE)🗄️  Opening database shell for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend python manage.py dbshell
 
 shell-backend: ## Access backend container bash
 	@echo "$(BLUE)🐚 Opening backend container bash for $(ENV) environment...$(NC)"
@@ -152,6 +168,14 @@ shell-frontend: ## Access frontend container bash
 shell-nginx: ## Access nginx container bash
 	@echo "$(BLUE)🐚 Opening nginx container bash for $(ENV) environment...$(NC)"
 	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec nginx sh
+
+shell-postgres: ## Access postgres container bash
+	@echo "$(BLUE)🐚 Opening postgres container bash for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec postgres bash
+
+shell-redis: ## Access redis-cli in Redis container
+	@echo "$(BLUE)🐚 Opening redis-cli for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec redis redis-cli
 
 ##@ Code Quality
 install: ## Install dependencies for both backend and frontend
@@ -177,6 +201,15 @@ test: ## Run tests for both backend and frontend
 	@cd backend && make test
 	@echo "$(GREEN)🧪 Running frontend tests...$(NC)"
 	@cd frontend && make test
+
+test-backend: ## Run backend tests only
+	@echo "$(GREEN)🧪 Running backend tests for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend python manage.py test
+
+test-coverage: ## Run backend tests with coverage
+	@echo "$(GREEN)🧪 Running backend tests with coverage for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend coverage run --source='.' manage.py test
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend coverage report
 
 ##@ Maintenance
 clean: ## Clean up Docker resources
@@ -272,14 +305,34 @@ uat: ## Quick start UAT environment
 	@make start ENV=uat
 	@echo "$(GREEN)✅ UAT environment is ready!$(NC)"
 
+##@ Utility Commands
+ps: ## Show running containers
+	@echo "$(BLUE)🐳 Showing running containers for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) ps
+
+images: ## Show Docker images
+	@echo "$(BLUE)🖼️  Showing Docker images for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) images
+
+exec-backend: ## Execute command in backend container (usage: make exec-backend CMD="command")
+	@if [ -z "$(CMD)" ]; then \
+		echo "$(RED)❌ Please specify CMD. Usage: make exec-backend CMD=\"command\"$(NC)"; \
+		exit 1; \
+	fi
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) exec backend $(CMD)
+
+up-logs: ## Start all services and follow logs
+	@echo "$(GREEN)🚀 Starting services with logs for $(ENV) environment...$(NC)"
+	docker-compose -f $(COMPOSE_FILES) --env-file $(ENV_FILE) up
+
 ##@ Monitoring
 health: ## Check health of all services
 	@echo "$(BLUE)🏥 Checking service health for $(ENV) environment...$(NC)"
 	@echo "$(YELLOW)Backend Health:$(NC)"
-	@curl -s http://localhost:8000/health/ || echo "$(RED)Backend not responding$(NC)"
+	@curl -s http://localhost:8080/api/health/ || echo "$(RED)Backend not responding$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Nginx Health:$(NC)"
-	@curl -s http://localhost:80/health || echo "$(RED)Nginx not responding$(NC)"
+	@curl -s http://localhost:8080/health || echo "$(RED)Nginx not responding$(NC)"
 	@echo ""
 
 monitor: ## Show real-time resource usage

@@ -261,8 +261,10 @@ make env-check ENV=development     # Validate environment
 # Service management
 make start ENV=development         # Start all services
 make stop ENV=development          # Stop all services
+make down ENV=development          # Alias for stop command
 make restart ENV=development       # Restart services
 make status ENV=development        # Show service status
+make up-logs ENV=development       # Start services and follow logs
 
 # Individual services
 make start-backend ENV=development # Start only backend services
@@ -274,22 +276,48 @@ make migrate ENV=development       # Run migrations
 make makemigrations ENV=development# Create migrations
 make collectstatic ENV=development # Collect static files
 make createsuperuser ENV=development# Create admin user
+make dbshell ENV=development       # Open database shell
+
+# API Documentation
+make schema ENV=development        # Generate OpenAPI schema
+make docs                          # Show API documentation URLs
 
 # Development tools
 make shell ENV=development         # Django shell
 make shell-backend ENV=development # Backend container bash
 make shell-frontend ENV=development# Frontend container bash
+make shell-nginx ENV=development   # Nginx container bash
+make shell-postgres ENV=development# Postgres container bash
+make shell-redis ENV=development   # Redis CLI
+
+# Testing
+make test ENV=development          # Run all tests
+make test-backend ENV=development  # Run backend tests only
+make test-coverage ENV=development # Run tests with coverage
+
+# Code quality
+make lint ENV=development          # Run linting
+make format ENV=development        # Format code
+make install ENV=development       # Install dependencies
+
+# Utility commands
+make ps ENV=development            # Show running containers
+make images ENV=development        # Show Docker images
+make exec-backend CMD="command"    # Execute command in backend container
 
 # Monitoring
 make logs ENV=development          # View all logs
 make logs-backend ENV=development  # Backend logs only
 make logs-frontend ENV=development # Frontend logs only
+make logs-nginx ENV=development    # Nginx logs only
 make health ENV=development        # Check service health
 make monitor ENV=development       # Resource usage
 
 # Maintenance
 make backup ENV=development        # Database backup
+make restore BACKUP_FILE=file.sql  # Restore database
 make clean                         # Clean Docker resources
+make clean-all                     # Remove all containers/images
 make update ENV=development        # Pull latest images
 ```
 
@@ -299,6 +327,87 @@ make update ENV=development        # Pull latest images
 make dev                     # Start development environment
 make uat                     # Start UAT environment
 make prod                    # Start production environment
+```
+
+### 📋 Make Command Help
+
+To see all available commands with descriptions:
+```bash
+make help                    # Show comprehensive help with categories
+make info                    # Show environment information
+```
+
+The Makefile is organized into logical sections:
+- **Environment Management**: Setup and switching between environments
+- **Docker Operations**: Build, start, stop, restart services
+- **Individual Service Management**: Control specific services
+- **Database Operations**: Migrations, admin users, backups
+- **Development Tools**: Shells, debugging, API docs
+- **Code Quality**: Testing, linting, formatting
+- **Utility Commands**: Container inspection, execution
+- **Monitoring**: Health checks, logs, resource usage
+- **Maintenance**: Cleanup, updates, SSL setup
+
+### 🔧 Troubleshooting & Debugging
+
+#### Container Management
+```bash
+# Check container status
+make ps ENV=development
+make status ENV=development
+
+# View logs
+make logs ENV=development              # All services
+make logs-backend ENV=development      # Backend only
+make logs-frontend ENV=development     # Frontend only
+make logs-nginx ENV=development        # Nginx only
+
+# Access container shells
+make shell-backend ENV=development     # Backend container bash
+make shell-frontend ENV=development    # Frontend container shell
+make shell-postgres ENV=development    # Database container
+make shell-redis ENV=development       # Redis CLI
+
+# Health checks
+make health ENV=development            # Check all services
+curl http://localhost:8080/api/health/ # Backend health
+curl http://localhost:8080/health      # Nginx health
+```
+
+#### Common Issues & Solutions
+```bash
+# 1. Containers won't start
+make down ENV=development
+make clean
+make start ENV=development
+
+# 2. Database connection issues
+make shell-postgres ENV=development    # Check database
+make dbshell ENV=development          # Django database shell
+make migrate ENV=development          # Run migrations
+
+# 3. Frontend build issues
+make shell-frontend ENV=development   # Access frontend container
+# Inside container: npm install or bun install
+
+# 4. Permission issues
+make exec-backend CMD="chown -R $(id -u):$(id -g) /app"
+
+# 5. Port conflicts
+make stop ENV=development            # Stop services
+docker ps                            # Check for conflicting containers
+make start ENV=development           # Restart
+
+# 6. Complete reset
+make clean-all                       # WARNING: Removes everything
+make dev                            # Fresh start
+```
+
+#### Performance Monitoring
+```bash
+make monitor ENV=development         # Real-time resource usage
+make ps ENV=development             # Container status
+make images ENV=development         # Image sizes
 ```
 
 ## 🔧 Development
