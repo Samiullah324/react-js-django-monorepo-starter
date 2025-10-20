@@ -3,4 +3,5 @@
 	url = git@github.com:BlueSky-Digital-Labs/react-js-django-monorepo-starter-frontend.git
 [submodule "backend"]
 	path = backend
-	url = git@github.com:BlueSky-Digital-Labs/react-js-django-monorepo-starter-backend.git
+	url = git@github.com:BlueSky-Digital-Labs/Vantage-Partners-backend.git
+	branch = develop
